@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QVBoxLayout, QWidget
 from PyQt5.QtCore import QTimer
-from MatplotlibWidget import MatplotlibWidget
+from SpeedometerWidget import SpeedometerWidget
 
 
 class MainWindow(QMainWindow):
@@ -11,6 +11,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Спидометр")
         self.setGeometry(100, 100, 800, 600)
 
+        self.inertia = 1
         self.acceleration_inertia = 0.01
 
         # Основной виджет
@@ -21,7 +22,7 @@ class MainWindow(QMainWindow):
         self.layout = QVBoxLayout(self.central_widget)
 
         # Виджет для графиков
-        self.speedometer = MatplotlibWidget()
+        self.speedometer = SpeedometerWidget()
         self.layout.addWidget(self.speedometer)
 
         # Кнопки управления
@@ -47,7 +48,7 @@ class MainWindow(QMainWindow):
 
     def start_acceleration(self):
         """Начинает увеличение ускорения."""
-        self.acceleration_delta = 0.05  # Плавное увеличение ускорения
+        self.acceleration_delta = 0.5  # Плавное увеличение ускорения
 
     def stop_acceleration(self):
         """Прекращает увеличение ускорения."""
@@ -55,7 +56,7 @@ class MainWindow(QMainWindow):
 
     def start_deceleration(self):
         """Начинает уменьшение ускорения."""
-        self.acceleration_delta = -0.05  # Плавное уменьшение ускорения
+        self.acceleration_delta = -0.5  # Плавное уменьшение ускорения
 
     def stop_deceleration(self):
         """Прекращает уменьшение ускорения."""
@@ -68,7 +69,7 @@ class MainWindow(QMainWindow):
 
         # Плавное изменение ускорения
         self.acceleration += self.acceleration_delta
-        self.acceleration = max(-0.5, min(0.5, self.acceleration))  # Ограничиваем ускорение
+        self.acceleration = max(-50, min(50, self.acceleration))  # Ограничиваем ускорение
 
         # Обновляем текущую скорость с учетом ускорения
         self.current_speed += self.acceleration
@@ -76,9 +77,15 @@ class MainWindow(QMainWindow):
 
         # Обновляем график
         self.speedometer.draw_speedometer(self.current_speed)
+
+
         if (self.acceleration > 0):
             self.acceleration -= self.acceleration_inertia
         elif self.acceleration < 0:
             self.acceleration += self.acceleration_inertia
         if abs(self.acceleration) < self.acceleration_inertia:
             self.acceleration = 0
+        if self.current_speed <= 0 or self.current_speed >= max_speed:
+            self.acceleration = 0
+        if self.current_speed > self.inertia:
+            self.current_speed -= self.inertia
